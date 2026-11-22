@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  <link id="pwa-manifest" rel="manifest" href="">
+  <title>급여명세서</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter & Pretendard 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin="" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style id="app-base-style">
+    body {
+      font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #e2e8f0;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      user-select: none;
+    }
+    .mobile-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: #f8fafc;
+      padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .tap-btn {
+      transition: transform 0.1s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .tap-btn:active {
+      transform: scale(0.96);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    input, select, textarea {
+      font-size: 16px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    @media (min-width: 360px) {
+      .compact-input {
+        font-size: 12.5px;
+      }
+    }
+
+    /* =========================================================
+       8종 근무 형태별 고유 색상 (주간·오후·야간·특근3종·연차·휴무)
+       ========================================================= */
+    .sh-btn-day    { background-color: #f0f9ff; border-color: #7dd3fc; color: #0369a1; }
+    .sh-btn-aft    { background-color: #fffbeb; border-color: #fcd34d; color: #b45309; }
+    .sh-btn-ngt    { background-color: #eef2ff; border-color: #a5b4fc; color: #3730a3; }
+    .sh-btn-sp-day { background-color: #fff1f2; border-color: #fda4af; color: #be123c; }
+    .sh-btn-sp-aft { background-color: #fff7ed; border-color: #fdba74; color: #c2410c; }
+    .sh-btn-sp-ngt { background-color: #faf5ff; border-color: #d8b4fe; color: #7e22ce; }
+    .sh-btn-leave  { background-color: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+    .sh-btn-off    { background-color: #f8fafc; border-color: #cbd5e1; color: #475569; }
+
+    .sh-act-day    { background-color: #0284c7 !important; border-color: #0284c7 !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3); }
+    .sh-act-aft    { background-color: #d97706 !important; border-color: #d97706 !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(217, 119, 6, 0.3); }
+    .sh-act-ngt    { background-color: #1e293b !important; border-color: #1e293b !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(30, 41, 59, 0.32); }
+    .sh-act-sp-day { background-color: #e11d48 !important; border-color: #e11d48 !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(225, 29, 72, 0.3); }
+    .sh-act-sp-aft { background-color: #ea580c !important; border-color: #ea580c !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(234, 88, 12, 0.3); }
+    .sh-act-sp-ngt { background-color: #9333ea !important; border-color: #9333ea !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(147, 51, 234, 0.3); }
+    .sh-act-leave  { background-color: #059669 !important; border-color: #059669 !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(5, 150, 105, 0.3); }
+    .sh-act-off    { background-color: #475569 !important; border-color: #475569 !important; color: #ffffff !important; box-shadow: 0 3px 8px rgba(71, 85, 105, 0.28); }
+
+    .sh-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .pill-day    { background-color: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
+    .pill-aft    { background-color: #fef3c7; border-color: #fcd34d; color: #b45309; }
+    .pill-ngt    { background-color: #e0e7ff; border-color: #a5b4fc; color: #3730a3; }
+    .pill-sp-day { background-color: #ffe4e6; border-color: #fda4af; color: #be123c; }
+    .pill-sp-aft { background-color: #ffedd5; border-color: #fdba74; color: #c2410c; }
+    .pill-sp-ngt { background-color: #f3e8ff; border-color: #d8b4fe; color: #7e22ce; }
+    .pill-leave  { background-color: #d1fae5; border-color: #6ee7b7; color: #047857; }
+    .pill-off    { background-color: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    .pill-work   { background-color: #ccfbf1; border-color: #5eead4; color: #0f766e; }
+  </style>
+</head>
+<body>
+  <div class="mobile-shell relative shadow-lg">
+    <!-- =========================================================
+         1. 상단 다크 네이비(#0f172a) 헤더 & 평생 급여 주기 이동 바
+         ========================================================= -->
+    <header class="sticky top-0 z-30 bg-[#0f172a] text-white px-4 pt-3 pb-3 rounded-b-2xl shadow-md">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 shrink-0 rounded-2xl bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-inner">
+            급여
+          </div>
+          <div class="truncate">
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-base font-black tracking-tight text-white truncate">급여명세서</h1>
+              <span id="hdr-group-tag" class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 max-w-[125px] truncate">공유용 · 본인설정</span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate">마감 기준: 전월 18일 ~ 당월 17일</p>
+          </div>
+        </div>
+        <button type="button" onclick="openInstallModal()" class="tap-btn shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black px-3 py-2 rounded-xl shadow-sm">
+          📲 앱 설치
+        </button>
+      </div>
+
+      <!-- 평생 월별 급여 마감 주기 네비게이션 (중앙 터치 시 년·월·일 직접 이동) -->
+      <div class="flex items-center justify-between bg-slate-800/95 border border-slate-700/80 rounded-2xl p-1.5 gap-1">
+        <button type="button" onclick="changePayMonth(-1)" class="tap-btn w-9 h-8 shrink-0 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-black text-sm" aria-label="이전 급여월">◀</button>
+        <button type="button" onclick="openDateJumpModal()" class="tap-btn flex-1 text-center rounded-xl py-0.5 hover:bg-slate-700/60" aria-label="평생 년월일 이동">
+          <div class="flex items-center justify-center gap-1">
+            <span id="hdr-period-title" class="text-sm font-black text-white">2026년 12월 급여분</span>
+            <span class="text-[10px] text-emerald-300 font-bold">▾</span>
+          </div>
+          <div id="hdr-period-range" class="text-[11px] text-slate-400 tabular-nums">2026/11/18 ~ 2026/12/17 (30일)</div>
+        </button>
+        <button type="button" onclick="changePayMonth(1)" class="tap-btn w-9 h-8 shrink-0 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-black text-sm" aria-label="다음 급여월">▶</button>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         TAB 1: ⏱ 홈·입력
+         ========================================================= -->
+    <main id="view-home" class="tab-view px-3.5 pt-3 space-y-3">
+      <!-- 초기 0원 상태 안내 배너 (급여 기준 0원일 때 자동 표시) -->
+      <section id="setup-guide-banner" class="bg-indigo-50 border border-indigo-200 rounded-2xl p-3.5 shadow-sm">
+        <div class="text-xs font-black text-indigo-900">⚙️ 본인 급여 기준을 먼저 설정해 주세요</div>
+        <p class="text-[11px] text-indigo-700 mt-1 leading-relaxed">
+          초기 급여 기준이 모두 <strong>0원</strong>으로 설정되어 있습니다. 본인의 기본급·시급·공제액을 입력하면 자동 계산됩니다.
+        </p>
+        <button type="button" onclick="goToSalarySetup()" class="tap-btn w-full mt-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold py-2.5 rounded-xl shadow-sm">
+          ✏️ 내 급여 기준 입력하러 가기 →
+        </button>
+      </section>
+
+      <!-- 2. 상단 2열 요약 카드 (실제 통장 입금액 vs 별도 수령 상품권) -->
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <div class="grid grid-cols-12 gap-2 mb-2 tabular-nums">
+          <div class="col-span-7 bg-emerald-600 text-white rounded-xl p-3 shadow-sm flex flex-col justify-between">
+            <div class="text-[11px] font-bold text-emerald-100">💳 실제 통장 입금액 (현금)</div>
+            <div id="home-net-cash" class="text-xl font-black mt-0.5 tracking-tight">0원</div>
+            <div class="text-[10px] text-emerald-100/90 mt-0.5">세금·4대보험·상품권 공제 후</div>
+          </div>
+          <div class="col-span-5 bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-amber-700">🎟 별도 수령 상품권</div>
+              <div id="home-voucher-total" class="text-lg font-black text-amber-600 mt-0.5 tracking-tight">0원</div>
+            </div>
+            <div id="home-voucher-count" class="text-[10px] font-semibold text-amber-700/90 mt-0.5">직접 추가 합계 (0매)</div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+          <span class="text-slate-600 font-medium">세전 총급여 <strong id="home-gross-pay" class="text-slate-900 font-extrabold tabular-nums ml-1">0원</strong></span>
+          <button type="button" onclick="switchTab('payslip')" class="tap-btn text-blue-600 font-extrabold hover:text-blue-700">명세서 상세 ›</button>
+        </div>
+      </section>
+
+      <!-- 3. 실시간 출퇴근 타이머 -->
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <div class="flex items-start justify-between gap-2 mb-2.5">
+          <div>
+            <div id="clock-status" class="text-xs font-extrabold text-emerald-600">● 실시간 출퇴근 대기중</div>
+            <div id="today-live-date" class="text-[11px] text-slate-500 mt-0.5 font-medium"></div>
+          </div>
+          <div id="live-clock-display" class="text-2xl font-black text-slate-900 tabular-nums tracking-tight leading-none">00:00:00</div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="clockIn()" class="tap-btn bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-3 text-center shadow-sm">
+            <span class="block text-xs font-extrabold">🟢 출근 찍기</span>
+            <span class="block text-[10px] text-slate-300 mt-0.5">선택 날짜 출근 기록</span>
+          </button>
+          <button type="button" onclick="clockOut()" class="tap-btn bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2.5 px-3 text-center shadow-sm">
+            <span class="block text-xs font-extrabold">🔴 퇴근 찍기</span>
+            <span class="block text-[10px] text-emerald-100 mt-0.5">기본·야간·연장 자동반영</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 4. 평생 날짜 선택 & 8종 시프트 원터치 / 추가 수당 입력 -->
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <!-- 평생 날짜 바 (오늘 날짜일 때 초록색 강조 + 평생 이동 버튼) -->
+        <div id="date-bar" class="flex items-center justify-between gap-1 bg-emerald-50 border border-emerald-400 rounded-xl p-1.5 mb-2 transition-colors">
+          <button type="button" onclick="moveDate(-1, true)" class="tap-btn bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 shrink-0">◀ 이전일</button>
+          <select id="date-dropdown" onchange="selectDate(this.value)" class="compact-input bg-transparent border-0 text-center font-extrabold text-slate-900 focus:outline-none min-w-0 flex-1 truncate tabular-nums"></select>
+          <button type="button" onclick="openDateJumpModal()" class="tap-btn bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold shrink-0" title="평생 년·월·일 이동">📆</button>
+          <button type="button" onclick="jumpToToday()" id="btn-jump-today" class="tap-btn bg-emerald-500 text-white rounded-lg px-2 py-1.5 text-[11px] font-extrabold shrink-0 hidden">오늘</button>
+          <button type="button" onclick="moveDate(1, true)" class="tap-btn bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 shrink-0">다음일 ▶</button>
+        </div>
+
+        <!-- 선택일 야간수당 요약 배너 -->
+        <div class="flex items-center justify-between bg-blue-50/90 border border-blue-100 rounded-xl px-3 py-2 text-xs mb-3">
+          <span class="text-slate-700 font-semibold">🌙 야간수당: <strong id="selected-night-info" class="text-blue-700 font-extrabold tabular-nums">0h (0원)</strong></span>
+          <span id="selected-shift-badge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white text-slate-600 border border-blue-100">미입력</span>
+        </div>
+
+        <!-- 시프트 원터치 입력 (오후특근 포함 8종 고유 색상) -->
+        <div class="flex items-center justify-between text-xs font-extrabold text-slate-600 mb-2">
+          <span>⚡ 시프트 원터치 입력 (터치 즉시 기록·다음날 이동)</span>
+          <button type="button" onclick="clearDay()" class="tap-btn text-rose-600 font-extrabold text-xs px-1.5 py-0.5 rounded-md hover:bg-rose-50">🗑 비우기</button>
+        </div>
+
+        <!-- 1줄: 기본 3교대 (주간·오후·야간) -->
+        <div class="grid grid-cols-3 gap-1.5 mb-1.5">
+          <button type="button" id="btn-shift-주간 8h" onclick="applyShift('주간 8h','07:00','15:30',8,0,0)" class="shift-btn sh-btn-day tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🌅 주간 8h</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">07:00~15:30</small>
+          </button>
+          <button type="button" id="btn-shift-오후 8h" onclick="applyShift('오후 8h','15:00','23:30',8,1.5,0)" class="shift-btn sh-btn-aft tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🌇 오후 8h</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">15:00~23:30</small>
+          </button>
+          <button type="button" id="btn-shift-야간 8h" onclick="applyShift('야간 8h','23:00','07:30',8,7,0)" class="shift-btn sh-btn-ngt tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🌙 야간 8h</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">23:00~07:30</small>
+          </button>
+        </div>
+
+        <!-- 2줄: 휴일 특근 3종 (주간특근·오후특근·야간특근) -->
+        <div class="grid grid-cols-3 gap-1.5 mb-1.5">
+          <button type="button" id="btn-shift-주간특근 8h" onclick="applyShift('주간특근 8h','07:00','15:30',0,0,8)" class="shift-btn sh-btn-sp-day tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🏙 주간특근</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">07:00~15:30</small>
+          </button>
+          <button type="button" id="btn-shift-오후특근 8h" onclick="applyShift('오후특근 8h','15:00','23:30',0,1.5,8)" class="shift-btn sh-btn-sp-aft tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🌆 오후특근</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">15:00~23:30</small>
+          </button>
+          <button type="button" id="btn-shift-야간특근 8h" onclick="applyShift('야간특근 8h','23:00','07:30',0,7,8)" class="shift-btn sh-btn-sp-ngt tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🌃 야간특근</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5 tabular-nums">23:00~07:30</small>
+          </button>
+        </div>
+
+        <!-- 3줄: 연차/대휴 · 휴무 -->
+        <div class="grid grid-cols-2 gap-1.5 mb-3.5">
+          <button type="button" id="btn-shift-연차/대휴" onclick="applyShift('연차/대휴','-','-',8,0,0)" class="shift-btn sh-btn-leave tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🏖 연차/대휴</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5">유급휴무 (8h)</small>
+          </button>
+          <button type="button" id="btn-shift-휴무" onclick="applyShift('휴무','-','-',0,0,0)" class="shift-btn sh-btn-off tap-btn border rounded-xl py-2 px-1 text-center">
+            <strong class="block text-xs font-extrabold">🛌 휴무</strong>
+            <small class="block text-[9.5px] opacity-85 mt-0.5">0h 휴식일</small>
+          </button>
+        </div>
+
+        <!-- 선택일 추가 수당 & 상품권 조절 (항목별 소프트 컬러 톤 적용) -->
+        <div class="text-xs font-extrabold text-slate-600 mb-2">➕ 선택일 추가 수당 &amp; 상품권 (조출·잔업 시 시각 자동변동)</div>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between bg-sky-50/80 border border-sky-200/80 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-slate-800">1. 조출 <span id="val-early" class="text-sky-700 ml-1 tabular-nums">0h</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustField('early', 1)" class="tap-btn bg-sky-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+1h</button>
+              <button type="button" onclick="adjustField('early', 0.5)" class="tap-btn bg-sky-100 text-sky-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+30m</button>
+              <button type="button" onclick="adjustField('early', -0.5)" class="tap-btn bg-white border border-sky-200 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-30m</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-blue-50/80 border border-blue-200/80 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-slate-800">2. 잔업 <span id="val-overtime" class="text-blue-700 ml-1 tabular-nums">0h</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustField('overtime', 1)" class="tap-btn bg-blue-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+1h</button>
+              <button type="button" onclick="adjustField('overtime', 0.5)" class="tap-btn bg-blue-100 text-blue-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+30m</button>
+              <button type="button" onclick="adjustField('overtime', -0.5)" class="tap-btn bg-white border border-blue-200 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-30m</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-indigo-50/80 border border-indigo-200/80 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-slate-800">3. 야간 <span id="val-night" class="text-indigo-700 ml-1 tabular-nums">0h (0원)</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustField('night', 1)" class="tap-btn bg-indigo-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+1h</button>
+              <button type="button" onclick="adjustField('night', 0.5)" class="tap-btn bg-indigo-100 text-indigo-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+30m</button>
+              <button type="button" onclick="adjustField('night', -0.5)" class="tap-btn bg-white border border-indigo-200 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-30m</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-rose-50/80 border border-rose-200/80 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-slate-800">4. 휴연 <span id="val-holiday" class="text-rose-600 ml-1 tabular-nums">0h</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustField('holiday', 1)" class="tap-btn bg-rose-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+1h</button>
+              <button type="button" onclick="adjustField('holiday', 0.5)" class="tap-btn bg-rose-100 text-rose-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+30m</button>
+              <button type="button" onclick="adjustField('holiday', -0.5)" class="tap-btn bg-white border border-rose-200 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-30m</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-slate-800">5. 특별근로 <span id="val-special" class="text-emerald-700 ml-1 tabular-nums">0h (0원)</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustField('special', 1)" class="tap-btn bg-emerald-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+1h</button>
+              <button type="button" onclick="adjustField('special', 0.5)" class="tap-btn bg-emerald-100 text-emerald-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+30m</button>
+              <button type="button" onclick="adjustField('special', -0.5)" class="tap-btn bg-white border border-emerald-200 text-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-30m</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            <div class="text-xs font-extrabold text-amber-900">6. 상품권 <span id="val-voucher" class="text-amber-600 ml-1 tabular-nums">0원</span></div>
+            <div class="flex gap-1">
+              <button type="button" onclick="adjustVoucher(50000)" class="tap-btn bg-amber-500 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold">+5만원</button>
+              <button type="button" onclick="adjustVoucher(100000)" class="tap-btn bg-amber-100 text-amber-900 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">+10만원</button>
+              <button type="button" onclick="adjustVoucher(-50000)" class="tap-btn bg-white border border-amber-300 text-amber-800 rounded-lg px-2 py-1.5 text-[11px] font-extrabold">-5만원</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 월간 6단 항목별 합계 현황 -->
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-extrabold text-slate-600 mb-2.5">
+          <span>📊 월간 6단 항목별 합계 현황</span>
+          <span id="fixed-pay-label" class="text-[11px] font-bold text-slate-500 tabular-nums">고정급 0원</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 tabular-nums">
+          <div class="bg-sky-50/70 border border-sky-200/70 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-slate-500"><span>1. 조출·잔업 연장</span><span class="text-blue-600">1.5x</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-ext-h" class="text-xs font-black text-slate-900 truncate">0h (조0+잔0)</strong>
+              <span id="st-ext-p" class="text-xs font-extrabold text-blue-600 shrink-0">0원</span>
+            </div>
+          </div>
+          <div class="bg-indigo-50/70 border border-indigo-200/70 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-slate-500"><span>2. 심야수당 (22~06)</span><span class="text-indigo-600">0.5x</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-ngt-h" class="text-xs font-black text-slate-900">0h</strong>
+              <span id="st-ngt-p" class="text-xs font-extrabold text-indigo-600">0원</span>
+            </div>
+          </div>
+          <div class="bg-rose-50/70 border border-rose-200/70 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-slate-500"><span>3. 휴일특근 (휴근·휴연)</span><span class="text-rose-600">1.5/2x</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-hol-h" class="text-xs font-black text-slate-900">0h</strong>
+              <span id="st-hol-p" class="text-xs font-extrabold text-rose-600">0원</span>
+            </div>
+          </div>
+          <div class="bg-emerald-50/70 border border-emerald-200/70 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-slate-500"><span>4. 특별근로</span><span class="text-emerald-600">만원올림</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-spc-h" class="text-xs font-black text-slate-900">0h</strong>
+              <span id="st-spc-p" class="text-xs font-extrabold text-emerald-600">0원</span>
+            </div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-slate-500"><span>5. 고정급여</span><span>기본+상여+직책</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-base-h" class="text-xs font-black text-slate-900">정상 0h</strong>
+              <span id="st-base-p" class="text-xs font-extrabold text-slate-900">0원</span>
+            </div>
+          </div>
+          <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5">
+            <div class="flex justify-between text-[10.5px] font-bold text-amber-700"><span>6. 상품권 (직접추가)</span><span>과세포함</span></div>
+            <div class="flex justify-between items-baseline mt-1.5 gap-1">
+              <strong id="st-vch-c" class="text-xs font-black text-amber-900">0장</strong>
+              <span id="st-vch-p" class="text-xs font-extrabold text-amber-600">0원</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. 일자별 근무 리스트 -->
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-extrabold text-slate-600 mb-2.5">
+          <span>📅 일자별 근무 리스트 (터치 시 선택·수정)</span>
+          <span class="text-[11px] font-bold">
+            <span class="text-emerald-600">● 오늘</span>
+            <span class="text-blue-600 ml-1.5">● 선택</span>
+          </span>
+        </div>
+        <div id="day-list" class="max-h-96 overflow-y-auto space-y-1.5 pr-0.5"></div>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         TAB 2: 📋 근태표
+         ========================================================= -->
+    <main id="view-table" class="tab-view hidden px-3.5 pt-3 space-y-3">
+      <section class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-extrabold text-slate-700">📋 상세 출퇴근표 (행 터치 시 수정)</span>
+          <button type="button" onclick="exportCSV()" class="tap-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">📥 엑셀(CSV)</button>
+        </div>
+        <div class="overflow-x-auto border border-slate-300 rounded-xl">
+          <table class="w-full min-w-[680px] border-collapse text-[11px] text-center bg-white tabular-nums">
+            <thead>
+              <tr class="bg-[#0f172a] text-white">
+                <th rowspan="2" class="border border-slate-600 py-2 px-1.5 font-bold">년·월·일(요일)</th>
+                <th rowspan="2" class="border border-slate-600 py-2 px-1.5 font-bold">근무구분</th>
+                <th colspan="2" class="border border-slate-600 py-1.5 px-1 font-bold">출퇴근 시각</th>
+                <th colspan="5" class="border border-slate-600 py-1.5 px-1 font-bold">근로시간 상세 (h)</th>
+                <th rowspan="2" class="border border-slate-600 py-2 px-1.5 font-bold">일 수당계</th>
+                <th rowspan="2" class="border border-slate-600 py-2 px-1.5 font-bold">상품권</th>
+                <th rowspan="2" class="border border-slate-600 py-2 px-1.5 font-bold">비고</th>
+              </tr>
+              <tr class="bg-slate-200 text-slate-800 text-[10.5px]">
+                <th class="border border-slate-300 py-1 px-1">출근</th>
+                <th class="border border-slate-300 py-1 px-1">퇴근</th>
+                <th class="border border-slate-300 py-1 px-1">기본</th>
+                <th class="border border-slate-300 py-1 px-1">조출</th>
+                <th class="border border-slate-300 py-1 px-1">잔업</th>
+                <th class="border border-slate-300 py-1 px-1">야간</th>
+                <th class="border border-slate-300 py-1 px-1">특근/특별</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+            <tfoot id="table-foot"></tfoot>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         TAB 3: 🧾 급여명세서
+         ========================================================= -->
+    <main id="view-payslip" class="tab-view hidden px-3.5 pt-3 space-y-3">
+      <section class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-black text-slate-900">🧾 급여명세서 상세 정산</span>
+          <button type="button" onclick="copyKakaoSummary()" class="tap-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">📋 카톡 요약 복사</button>
+        </div>
+        <div id="payslip-detail" class="divide-y divide-dashed divide-slate-200 tabular-nums"></div>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         TAB 4: ⚙️ 공유·설정 (급여 0원 기준 / 영문 백업·복원 / 편집 가능한 코드란)
+         ========================================================= -->
+    <main id="view-settings" class="tab-view hidden px-3.5 pt-3 space-y-3">
+      <!-- 1) 본인 급여 기준 설정 (기본값 모두 0원) -->
+      <section id="salary-config-card" class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-sm font-black text-slate-900">⚙️ 본인 급여 기준 설정</span>
+          <button type="button" onclick="resetZeroConfig()" class="tap-btn text-[11px] font-extrabold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">🔄 모두 0원 초기화</button>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">
+          초기 기본값은 모두 <strong>0원</strong>입니다. 본인 급여 기준을 입력해 저장하세요.
+        </p>
+        <div class="space-y-2.5">
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">표시 직군 / 이름 태그 (선택)</span>
+            <input type="text" id="cfg-label" placeholder="예: A직군 시급, 홍길동" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-indigo-500">
+          </label>
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">기본급 + 정기상여 (원)</span>
+            <input type="number" min="0" id="cfg-base" placeholder="0" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold tabular-nums focus:outline-none focus:border-indigo-500">
+          </label>
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">직책수당 (원)</span>
+            <input type="number" min="0" id="cfg-pos" placeholder="0" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold tabular-nums focus:outline-none focus:border-indigo-500">
+          </label>
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">통상시급 (원) <span class="text-indigo-600">*연장·야간·특근 계산 기준</span></span>
+            <input type="number" min="0" id="cfg-hourly" placeholder="0" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold tabular-nums focus:outline-none focus:border-indigo-500">
+          </label>
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">고정 4대보험 공제액 (원)</span>
+            <input type="number" min="0" id="cfg-ins" placeholder="0" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold tabular-nums focus:outline-none focus:border-indigo-500">
+          </label>
+          <label class="block">
+            <span class="block text-xs font-bold text-slate-600 mb-1">예상 소득세·지방세 (원)</span>
+            <input type="number" min="0" id="cfg-tax" placeholder="0" onchange="saveConfig(false)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold tabular-nums focus:outline-none focus:border-indigo-500">
+          </label>
+        </div>
+        <button type="button" onclick="saveConfig(true)" class="tap-btn w-full mt-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm py-3 rounded-xl shadow-sm">
+          ✅ 내 급여 기준 저장하기
+        </button>
+      </section>
+
+      <!-- 2) 내 데이터 백업 및 복원 코드 (영문·숫자 전용 / 식별키 변경 / 직접 수정·복원) -->
+      <section class="bg-white rounded-2xl p-4 border-2 border-blue-200 shadow-sm">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-sm font-black text-slate-900">🔄 내 데이터 백업 및 복원 코드</span>
+          <button type="button" onclick="refreshBackupBox()" class="tap-btn bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold px-2.5 py-1 rounded-lg">🔄 최신 생성</button>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-2.5 leading-relaxed">
+          복원 코드는 <strong>100% 영문·숫자 코드(Base64)</strong>로 생성되어 복사해도 한글이 섞이지 않습니다. 식별키 변경 및 코드 직접 수정·붙여넣기 복원이 가능합니다.
+        </p>
+
+        <!-- 나만의 식별키 변경 -->
+        <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1.5 mb-2.5">
+          <label for="backup-prefix-input" class="text-[11px] font-extrabold text-slate-600 shrink-0 pl-1">🔑 코드 식별키</label>
+          <input type="text" id="backup-prefix-input" maxlength="16" placeholder="PAY1" class="compact-input flex-1 min-w-0 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-black uppercase text-slate-900 focus:outline-none focus:border-blue-500">
+          <button type="button" onclick="applyBackupPrefix()" class="tap-btn bg-slate-900 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shrink-0">키 변경</button>
+        </div>
+
+        <!-- 직접 편집·붙여넣기 가능한 복원 코드 입력란 -->
+        <label for="share-code-box" class="block text-[11px] font-bold text-slate-600 mb-1">백업 / 복원 코드 (직접 변경·붙여넣기 가능)</label>
+        <textarea id="share-code-box" rows="4" oninput="onBackupBoxInput()" spellcheck="false" autocomplete="off" autocapitalize="off" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 break-all focus:outline-none focus:border-blue-500" placeholder="PAY1:eyJ..."></textarea>
+
+        <div id="backup-code-status" class="text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-emerald-50 text-emerald-800 border border-emerald-200 tabular-nums">✅ 영문/숫자 코드 준비됨</div>
+
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <button type="button" onclick="copyShareCode()" class="tap-btn bg-blue-600 text-white font-extrabold text-xs py-2.5 rounded-xl">📋 영문 코드 복사</button>
+          <button type="button" onclick="applyBackupBoxCode()" class="tap-btn bg-emerald-600 text-white font-extrabold text-xs py-2.5 rounded-xl">✅ 변경 코드 적용(복원)</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <button type="button" onclick="clearBackupBox()" class="tap-btn bg-white border border-slate-300 text-slate-700 font-extrabold text-xs py-2 rounded-xl">🧹 입력칸 비우기</button>
+          <button type="button" onclick="exportJsonBackup()" class="tap-btn bg-slate-100 border border-slate-300 text-slate-700 font-extrabold text-xs py-2 rounded-xl">💾 JSON 백업 저장</button>
+        </div>
+        <button type="button" onclick="triggerJsonImport()" class="tap-btn w-full bg-white border border-slate-300 text-slate-700 font-extrabold text-xs py-2.5 rounded-xl">
+          📂 저장한 JSON 백업 파일 불러오기
+        </button>
+        <input type="file" id="json-import-file" accept=".json,application/json,text/plain" class="hidden" onchange="handleJsonImport(event)">
+      </section>
+
+      <!-- 3) 직접 수정 가능한 앱 HTML 코드란 (다른 플랫폼·앱 빌더 제작 및 수정용) -->
+      <section id="code-editor-card" class="bg-white rounded-2xl p-4 border-2 border-emerald-200 shadow-sm">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-sm font-black text-slate-900">🛠️ 앱 HTML 코드란 (직접 수정·복사·저장)</span>
+          <button type="button" onclick="loadCleanCodeIntoEditor(true)" class="tap-btn bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-extrabold px-2.5 py-1 rounded-lg">🔄 원본 불러오기</button>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-relaxed mb-2.5">
+          다른 곳(Webintoapp·Vercel 등)에서 앱을 만들거나 내용을 바꿀 때, 아래 코드란에서 <strong>직접 수정한 뒤 그대로 복사·HTML·ZIP 저장</strong>할 수 있습니다. (내 개인 기록은 제외된 깨끗한 0원 코드가 불러와집니다.)
+        </p>
+
+        <div id="save-done-notice" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 mb-2.5 text-[11.5px] text-emerald-900 leading-relaxed">
+          <strong id="save-done-filename">✅ 저장 요청 완료!</strong><br>
+          갤럭시 <strong>[내 파일] → [다운로드]</strong> 폴더에서 확인하세요.
+        </div>
+
+        <textarea id="code-editor-box" rows="8" oninput="onCodeEditorInput()" spellcheck="false" autocomplete="off" autocapitalize="off" class="w-full border border-slate-300 bg-slate-950 text-emerald-300 rounded-xl p-2.5 text-[11px] font-mono leading-relaxed focus:outline-none focus:border-emerald-500" placeholder="상단 [🔄 원본 불러오기]를 누르면 수정 가능한 전체 HTML 코드가 표시됩니다."></textarea>
+        <div id="code-editor-status" class="text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-slate-100 text-slate-700 border border-slate-200 tabular-nums">ℹ️ [🔄 원본 불러오기]를 누르면 편집 가능한 순수 HTML 코드가 채워집니다.</div>
+
+        <div class="space-y-2">
+          <button type="button" onclick="downloadZipFromEditor()" class="tap-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm py-3 rounded-xl shadow-sm">
+            📦 코드란 내용으로 급여명세서.zip 저장 (앱 변환용)
+          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="downloadHtmlFromEditor()" class="tap-btn bg-indigo-600 text-white font-extrabold text-xs py-2.5 rounded-xl">📄 급여명세서.html 저장</button>
+            <button type="button" onclick="copyCodeFromEditor()" class="tap-btn bg-blue-600 text-white font-extrabold text-xs py-2.5 rounded-xl">📋 코드란 전체 복사</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="shareAppFileFromEditor()" class="tap-btn bg-slate-800 text-white font-extrabold text-xs py-2.5 rounded-xl">📤 카톡·파일로 내보내기</button>
+            <button type="button" onclick="openExternalWebintoapp()" class="tap-btn bg-white border border-slate-300 text-slate-700 font-extrabold text-xs py-2.5 rounded-xl">🚀 Webintoapp 열기</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         하단 고정 탭바
+         ========================================================= -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white/95 backdrop-blur-md border-t border-slate-200 grid grid-cols-4 gap-1.5 px-2.5 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] z-40">
+      <button type="button" data-tab="home" onclick="switchTab('home')" class="nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#0f172a] text-white">
+        <span class="text-base leading-none">⏱</span><span>홈·입력</span>
+      </button>
+      <button type="button" data-tab="table" onclick="switchTab('table')" class="nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold text-slate-500">
+        <span class="text-base leading-none">📋</span><span>근태표</span>
+      </button>
+      <button type="button" data-tab="payslip" onclick="switchTab('payslip')" class="nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold text-slate-500">
+        <span class="text-base leading-none">🧾</span><span>급여명세서</span>
+      </button>
+      <button type="button" data-tab="settings" onclick="switchTab('settings')" class="nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold text-slate-500">
+        <span class="text-base leading-none">⚙️</span><span>공유·설정</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================
+       모달 0: 📆 평생 날짜 설정 (년·월·일)
+       ========================================================= -->
+  <div id="date-jump-modal" onclick="if(event.target===this) closeModal('date-jump-modal')" class="fixed inset-0 bg-slate-950/60 backdrop-blur-[1px] z-50 hidden items-end justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl p-5 pb-[calc(24px+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <strong class="text-base font-black text-slate-900">📆 평생 날짜 설정 (년·월·일)</strong>
+        <button type="button" onclick="closeModal('date-jump-modal')" class="tap-btn bg-slate-100 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-xl">✕ 닫기</button>
+      </div>
+
+      <div class="mt-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3">
+        <div class="text-xs font-extrabold text-emerald-900 mb-2">1. 특정 년·월·일 바로 이동 (평생 · 윤년 자동 지원)</div>
+        <div class="flex items-center gap-2">
+          <input type="date" id="jump-ymd-input" min="1950-01-01" max="2199-12-31" class="flex-1 bg-white border border-emerald-300 rounded-xl px-3 py-2 text-sm font-extrabold text-slate-900 tabular-nums focus:outline-none focus:border-emerald-500">
+          <button type="button" onclick="applyJumpExactDate()" class="tap-btn shrink-0 bg-emerald-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-sm">이동</button>
+        </div>
+        <p class="text-[10.5px] text-emerald-700 mt-1.5">※ 선택한 날짜가 속한 급여분(전월 18일~당월 17일)으로 자동 이동합니다.</p>
+      </div>
+
+      <div class="mt-3 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div class="text-xs font-extrabold text-slate-800 mb-2">2. 급여분 연도 · 월 선택 (1950년 ~ 2199년 무제한)</div>
+        <div class="flex items-center gap-2 mb-2.5">
+          <button type="button" onclick="stepJumpYear(-1)" class="tap-btn bg-white border border-slate-300 text-slate-800 font-black text-xs px-3 py-2 rounded-xl">◀ 전년</button>
+          <select id="jump-year-select" onchange="onJumpYearChange(this.value)" class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-center text-sm font-black text-slate-900 tabular-nums focus:outline-none"></select>
+          <button type="button" onclick="stepJumpYear(1)" class="tap-btn bg-white border border-slate-300 text-slate-800 font-black text-xs px-3 py-2 rounded-xl">내년 ▶</button>
+        </div>
+        <div id="jump-month-grid" class="grid grid-cols-4 gap-1.5"></div>
+      </div>
+
+      <button type="button" onclick="jumpToToday(); closeModal('date-jump-modal');" class="tap-btn w-full mt-3 bg-[#0f172a] text-white font-extrabold text-xs py-3 rounded-xl">
+        🟢 오늘 날짜로 바로 이동
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       모달 1: 📲 앱 설치 및 APK 변환 안내
+       ========================================================= -->
+  <div id="install-modal" onclick="if(event.target===this) closeModal('install-modal')" class="fixed inset-0 bg-slate-950/60 backdrop-blur-[1px] z-50 items-end justify-center hidden">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl p-5 pb-[calc(24px+env(safe-area-inset-bottom))] shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <strong class="text-base font-black text-slate-900">📲 갤럭시 앱 설치 &amp; 코드 수정</strong>
+        <button type="button" onclick="closeModal('install-modal')" class="tap-btn bg-slate-100 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-xl">✕ 닫기</button>
+      </div>
+      <div class="space-y-3 mt-3.5 text-xs text-slate-700 leading-relaxed">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3">
+          <div class="font-extrabold text-emerald-900 mb-1">✅ 3단계 APK 앱 만들기</div>
+          <ol class="list-decimal list-inside space-y-1 text-emerald-800">
+            <li>아래 <strong>[📦 급여명세서.zip 저장]</strong>을 누릅니다. (내부에 <code>index.html</code> 자동 포장)</li>
+            <li>크롬에서 <strong>webintoapp.com</strong> → <strong>LAUNCH THE APP MAKER</strong> → <strong>HTML</strong> 선택</li>
+            <li>다운로드 폴더의 <strong>급여명세서.zip</strong>을 올려 APK를 생성해 카톡으로 공유합니다.</li>
+          </ol>
+        </div>
+        <button type="button" onclick="downloadZipFromEditor()" class="tap-btn w-full bg-emerald-600 text-white font-extrabold text-sm py-3 rounded-xl shadow-sm">
+          📦 급여명세서.zip 저장 (APK 변환용)
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="downloadHtmlFromEditor()" class="tap-btn bg-indigo-600 text-white font-extrabold text-xs py-2.5 rounded-xl">📄 급여명세서.html 저장</button>
+          <button type="button" onclick="goToCodeEditor()" class="tap-btn bg-slate-900 text-white font-extrabold text-xs py-2.5 rounded-xl">🛠️ 코드란에서 수정</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       모달 2: 상세 출퇴근 수정 모달
+       ========================================================= -->
+  <div id="edit-modal" onclick="if(event.target===this) closeModal('edit-modal')" class="fixed inset-0 bg-slate-950/60 backdrop-blur-[1px] z-50 hidden items-end justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl p-5 pb-[calc(24px+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <strong id="modal-date-title" class="text-base font-black text-slate-900">상세 출퇴근 수정</strong>
+        <button type="button" onclick="closeModal('edit-modal')" class="tap-btn bg-slate-100 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-xl">✕ 닫기</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 mt-3">
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">근무 구분</span>
+          <select id="m-shift" onchange="onModalShiftChange()" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white font-bold">
+            <option value="">미입력</option>
+            <option value="주간 8h">주간 8h</option>
+            <option value="오후 8h">오후 8h</option>
+            <option value="야간 8h">야간 8h</option>
+            <option value="주간특근 8h">주간특근 8h</option>
+            <option value="오후특근 8h">오후특근 8h</option>
+            <option value="야간특근 8h">야간특근 8h</option>
+            <option value="연차/대휴">연차/대휴</option>
+            <option value="휴무">휴무</option>
+            <option value="실근무">실근무</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">기본 시간 (h)</span>
+          <input type="number" step="0.5" min="0" id="m-base" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">출근 시각 (예: 07:00)</span>
+          <input type="text" id="m-start" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">퇴근 시각 (예: 15:30)</span>
+          <input type="text" id="m-end" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">조출 시간</span>
+          <input type="number" step="0.5" min="0" id="m-early" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">잔업 시간</span>
+          <input type="number" step="0.5" min="0" id="m-overtime" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">야간 시간</span>
+          <input type="number" step="0.5" min="0" id="m-night" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">휴일·특근 시간</span>
+          <input type="number" step="0.5" min="0" id="m-holiday" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">특별근로 시간</span>
+          <input type="number" step="0.5" min="0" id="m-special" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+        <label class="block">
+          <span class="block text-[11px] font-bold text-slate-600 mb-1">상품권 (원)</span>
+          <input type="number" step="50000" min="0" id="m-voucher" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-bold tabular-nums">
+        </label>
+      </div>
+      <label class="block mt-2.5">
+        <span class="block text-[11px] font-bold text-slate-600 mb-1">비고</span>
+        <input type="text" id="m-note" class="compact-input w-full border border-slate-300 rounded-xl px-2.5 py-2 font-medium" placeholder="메모를 입력하세요">
+      </label>
+      <div class="grid grid-cols-3 gap-2 mt-4">
+        <button type="button" onclick="deleteModalDay()" class="tap-btn col-span-1 bg-rose-600 text-white font-extrabold text-xs py-3 rounded-xl">🗑 삭제</button>
+        <button type="button" onclick="saveModalDay()" class="tap-btn col-span-2 bg-emerald-600 text-white font-extrabold text-xs py-3 rounded-xl">✅ 수정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 메시지 -->
+  <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-2.5 rounded-full text-xs font-extrabold shadow-lg z-[60] hidden max-w-[92vw] text-center pointer-events-none"></div>
+
+  <script id="app-main-script">
+    /* =========================================================
+       [★ 사용자 빠른 수정 영역]
+       코드란이나 외부 에디터에서 아래 값만 바꾸면 바로 적용됩니다.
+       ========================================================= */
+    const APP_DEFAULTS = {
+      defaultTag: '공유용 · 본인설정',
+      cutoffStartDay: 18,       // 마감 시작일 (전월 18일)
+      cutoffEndDay: 17,         // 마감 종료일 (당월 17일)
+      overtimeRate: 1.5,        // 조출·잔업 가산율
+      nightRate: 0.5,           // 심야 가산율 (22~06)
+      holidayRate: 1.5,         // 휴일·특근 가산율
+      specialRoundUnit: 10000,  // 특별근로 올림 단위 (1만원)
+      voucherUnit: 50000,       // 상품권 1매 기준 (5만원)
+      basePay: 0,               // 기본급 + 정기상여 (초기 0원)
+      posPay: 0,                // 직책수당 (초기 0원)
+      hourly: 0,                // 통상시급 (초기 0원)
+      fixedIns: 0,              // 고정 4대보험 공제액 (초기 0원)
+      estTax: 0                 // 예상 소득세·지방세 (초기 0원)
+    };
+
+    /* =========================================================
+       1. 로컬 스토리지 및 초기 상태
+       ========================================================= */
+    const STORAGE_CFG_KEY = 'payroll_final_zero_cfg';
+    const STORAGE_REC_KEY = 'payroll_final_zero_rec';
+    const STORAGE_CLK_KEY = 'payroll_final_zero_clk';
+    const STORAGE_CLK_DATE_KEY = 'payroll_final_zero_clk_date';
+    const STORAGE_PREFIX_KEY = 'payroll_final_zero_prefix';
+
+    const DEFAULT_CFG = {
+      label: APP_DEFAULTS.defaultTag,
+      basePay: APP_DEFAULTS.basePay,
+      posPay: APP_DEFAULTS.posPay,
+      hourly: APP_DEFAULTS.hourly,
+      fixedIns: APP_DEFAULTS.fixedIns,
+      estTax: APP_DEFAULTS.estTax
+    };
+
+    function safeGet(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeGetRaw(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function safeSet(key, val) {
+      try {
+        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    function safeRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {}
+    }
+
+    function sanitizePrefix(raw) {
+      const cleaned = String(raw || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16);
+      return cleaned || 'PAY1';
+    }
+
+    let cfg = Object.assign({}, DEFAULT_CFG, safeGet(STORAGE_CFG_KEY, {}));
+    let records = safeGet(STORAGE_REC_KEY, {});
+    let backupPrefix = sanitizePrefix(safeGetRaw(STORAGE_PREFIX_KEY) || 'PAY1');
+    let isBackupBoxDirty = false;
+    let isCodeEditorDirty = false;
+
+    function getTodayStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getPayPeriodForYMD(ymd) {
+      const parts = ymd.split('-').map(Number);
+      let y = parts[0];
+      let m = parts[1];
+      const d = parts[2];
+      if (d >= APP_DEFAULTS.cutoffStartDay) {
+        m += 1;
+        if (m > 12) {
+          m = 1;
+          y += 1;
+        }
+      }
+      return { year: y, month: m };
+    }
+
+    let payPeriod = getPayPeriodForYMD(getTodayStr());
+    let cycleDates = [];
+    let selectedDate = '';
+    let modalDate = '';
+    let jumpPickerYear = payPeriod.year;
+
+    const SHIFT_ACT_CLASSES = [
+      'sh-act-day', 'sh-act-aft', 'sh-act-ngt',
+      'sh-act-sp-day', 'sh-act-sp-aft', 'sh-act-sp-ngt',
+      'sh-act-leave', 'sh-act-off'
+    ];
+
+    function getShiftStyle(name) {
+      const map = {
+        '주간 8h':     { act: 'sh-act-day',    pill: 'pill-day' },
+        '오후 8h':     { act: 'sh-act-aft',    pill: 'pill-aft' },
+        '야간 8h':     { act: 'sh-act-ngt',    pill: 'pill-ngt' },
+        '주간특근 8h': { act: 'sh-act-sp-day', pill: 'pill-sp-day' },
+        '오후특근 8h': { act: 'sh-act-sp-aft', pill: 'pill-sp-aft' },
+        '야간특근 8h': { act: 'sh-act-sp-ngt', pill: 'pill-sp-ngt' },
+        '연차/대휴':  { act: 'sh-act-leave',  pill: 'pill-leave' },
+        '휴무':        { act: 'sh-act-off',    pill: 'pill-off' },
+        '실근무':      { act: 'sh-act-day',    pill: 'pill-work' }
+      };
+      return map[name] || { act: '', pill: '' };
+    }
+
+    function initManifest() {
+      try {
+        const manifest = {
+          name: '급여명세서',
+          short_name: '급여명세서',
+          start_url: './index.html',
+          display: 'standalone',
+          background_color: '#f8fafc',
+          theme_color: '#0f172a'
+        };
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const link = document.getElementById('pwa-manifest');
+        if (link) link.href = URL.createObjectURL(blob);
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(t._to);
+      t._to = setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    function fmt(n) {
+      return Math.round(n || 0).toLocaleString('ko-KR') + '원';
+    }
+
+    function formatDateYMD(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatShortYMD(ymd) {
+      return ymd.slice(2).replace(/-/g, '.');
+    }
+
+    /* =========================================================
+       2. 실시간 시계 & 출근 경과 시간
+       ========================================================= */
+    function updateLiveClock() {
+      const now = new Date();
+      const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const dateEl = document.getElementById('today-live-date');
+      const timeEl = document.getElementById('live-clock-display');
+      const stEl = document.getElementById('clock-status');
+
+      if (dateEl) {
+        dateEl.textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+      }
+      if (timeEl) {
+        timeEl.textContent = `${hh}:${mm}:${ss}`;
+      }
+      if (stEl) {
+        const inTs = safeGetRaw(STORAGE_CLK_KEY);
+        if (inTs) {
+          const inDate = new Date(Number(inTs));
+          const ih = String(inDate.getHours()).padStart(2, '0');
+          const im = String(inDate.getMinutes()).padStart(2, '0');
+          const diffMin = Math.max(0, Math.floor((now.getTime() - inDate.getTime()) / 60000));
+          stEl.textContent = `● 출근중 (${ih}:${im} 출근 · ${Math.floor(diffMin / 60)}시간 ${diffMin % 60}분 경과)`;
+          stEl.className = 'text-xs font-extrabold text-rose-600';
+        } else {
+          stEl.textContent = '● 실시간 출퇴근 대기중';
+          stEl.className = 'text-xs font-extrabold text-emerald-600';
+        }
+      }
+    }
+
+    /* =========================================================
+       3. 평생 급여 마감 주기 계산 & 무제한 날짜 이동
+       ========================================================= */
+    function changePayMonth(delta, pickEdge) {
+      let y = payPeriod.year;
+      let m = payPeriod.month + delta;
+      if (m < 1) { m = 12; y -= 1; }
+      if (m > 12) { m = 1; y += 1; }
+      payPeriod = { year: Math.max(1950, Math.min(2199, y)), month: m };
+      selectedDate = '';
+      buildDates(pickEdge);
+    }
+
+    function buildDates(pickEdge) {
+      let prevY = payPeriod.year;
+      let prevM = payPeriod.month - 1;
+      if (prevM < 1) { prevM = 12; prevY -= 1; }
+
+      const startD = new Date(prevY, prevM - 1, APP_DEFAULTS.cutoffStartDay);
+      const endD = new Date(payPeriod.year, payPeriod.month - 1, APP_DEFAULTS.cutoffEndDay);
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const list = [];
+
+      for (let cur = new Date(startD.getTime()); cur <= endD; cur.setDate(cur.getDate() + 1)) {
+        list.push({
+          date: formatDateYMD(cur),
+          dow: days[cur.getDay()],
+          dayIdx: cur.getDay()
+        });
+      }
+
+      cycleDates = list;
+      document.getElementById('hdr-period-title').textContent = `${payPeriod.year}년 ${payPeriod.month}월 급여분`;
+      document.getElementById('hdr-period-range').textContent =
+        `${formatDateYMD(startD).replace(/-/g, '/')} ~ ${formatDateYMD(endD).replace(/-/g, '/')} (${list.length}일)`;
+
+      const todayStr = getTodayStr();
+      document.getElementById('date-dropdown').innerHTML = list.map(x => {
+        const isToday = x.date === todayStr;
+        return `<option value="${x.date}">${isToday ? '🟢' : '📅'} ${formatShortYMD(x.date)} (${x.dow})${isToday ? ' [오늘]' : ''}</option>`;
+      }).join('');
+
+      if (pickEdge === 'first') {
+        selectedDate = list[0].date;
+      } else if (pickEdge === 'last') {
+        selectedDate = list[list.length - 1].date;
+      } else if (!selectedDate || !list.some(x => x.date === selectedDate)) {
+        selectedDate = list.some(x => x.date === todayStr) ? todayStr : list[0].date;
+      }
+      renderAll();
+    }
+
+    function openDateJumpModal() {
+      jumpPickerYear = payPeriod.year;
+      document.getElementById('jump-ymd-input').value = selectedDate || getTodayStr();
+      renderDateJumpControls();
+      openModal('date-jump-modal');
+    }
+
+    function renderDateJumpControls() {
+      const minY = Math.min(1950, jumpPickerYear - 5);
+      const maxY = Math.max(2199, jumpPickerYear + 10);
+      let opts = '';
+      for (let y = minY; y <= maxY; y++) {
+        opts += `<option value="${y}" ${y === jumpPickerYear ? 'selected' : ''}>${y}년</option>`;
+      }
+      document.getElementById('jump-year-select').innerHTML = opts;
+
+      let btns = '';
+      for (let m = 1; m <= 12; m++) {
+        const isCurrent = (jumpPickerYear === payPeriod.year && m === payPeriod.month);
+        const cls = isCurrent
+          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100';
+        btns += `<button type="button" onclick="jumpToYearMonth(${jumpPickerYear}, ${m})" class="tap-btn border rounded-xl py-2 text-xs font-extrabold ${cls}">${m}월분</button>`;
+      }
+      document.getElementById('jump-month-grid').innerHTML = btns;
+    }
+
+    function stepJumpYear(delta) {
+      jumpPickerYear = Math.max(1950, Math.min(2199, jumpPickerYear + delta));
+      renderDateJumpControls();
+    }
+
+    function onJumpYearChange(val) {
+      jumpPickerYear = Number(val) || payPeriod.year;
+      renderDateJumpControls();
+    }
+
+    function jumpToYearMonth(y, m) {
+      payPeriod = { year: y, month: m };
+      selectedDate = '';
+      buildDates();
+      closeModal('date-jump-modal');
+      showToast(`${y}년 ${m}월 급여분으로 이동`);
+    }
+
+    function applyJumpExactDate() {
+      const val = document.getElementById('jump-ymd-input').value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        showToast('이동할 년·월·일을 선택해 주세요.');
+        return;
+      }
+      payPeriod = getPayPeriodForYMD(val);
+      selectedDate = val;
+      buildDates();
+      closeModal('date-jump-modal');
+      showToast(`${val} 날짜로 이동했습니다.`);
+    }
+
+    function jumpToToday() {
+      const todayStr = getTodayStr();
+      if (cycleDates.some(x => x.date === todayStr)) {
+        selectedDate = todayStr;
+        renderAll();
+      } else {
+        payPeriod = getPayPeriodForYMD(todayStr);
+        selectedDate = todayStr;
+        buildDates();
+      }
+      showToast('오늘 날짜로 이동했습니다.');
+    }
+
+    /* =========================================================
+       4. 근무 기록 저장 및 급여 계산 엔진
+       ========================================================= */
+    function getRec(dateStr) {
+      return records[dateStr] || {
+        shift: '', baseStart: '-', baseEnd: '-', start: '-', end: '-',
+        baseH: 0, early: 0, overtime: 0, night: 0, holiday: 0, special: 0, voucher: 0, note: ''
+      };
+    }
+
+    function saveRec(dateStr, rec) {
+      records[dateStr] = rec;
+      safeSet(STORAGE_REC_KEY, records);
+    }
+
+    function resolveBaseH(rec) {
+      if (!rec || !rec.shift) return 0;
+      if (typeof rec.baseH === 'number') return rec.baseH;
+      return (!rec.shift.includes('특근') && rec.shift !== '휴무') ? 8 : 0;
+    }
+
+    function shiftMinutes(hhmm, deltaMin) {
+      if (!hhmm || hhmm === '-') return '-';
+      const parts = hhmm.split(':').map(Number);
+      if (isNaN(parts[0]) || isNaN(parts[1])) return hhmm;
+      let total = (parts[0] * 60 + parts[1] + deltaMin) % 1440;
+      if (total < 0) total += 1440;
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+
+    function recalcTimes(rec) {
+      if (!rec.baseStart || rec.baseStart === '-') {
+        rec.start = '-';
+        rec.end = '-';
+        return;
+      }
+      rec.start = shiftMinutes(rec.baseStart, -Math.round((rec.early || 0) * 60));
+      rec.end = shiftMinutes(rec.baseEnd, Math.round((rec.overtime || 0) * 60));
+    }
+
+    function applyShift(shiftName, startTime, endTime, baseH, nightH, holH) {
+      const rec = getRec(selectedDate);
+      rec.shift = shiftName;
+      rec.baseStart = startTime;
+      rec.baseEnd = endTime;
+      rec.baseH = baseH;
+      rec.night = nightH;
+      rec.holiday = holH;
+      if (shiftName === '휴무' || shiftName === '연차/대휴') {
+        rec.early = 0;
+        rec.overtime = 0;
+      }
+      recalcTimes(rec);
+      saveRec(selectedDate, rec);
+      showToast(`${formatShortYMD(selectedDate)} → ${shiftName} 입력`);
+      moveDate(1, false);
+    }
+
+    function clearDay() {
+      delete records[selectedDate];
+      safeSet(STORAGE_REC_KEY, records);
+      renderAll();
+      showToast(`${formatShortYMD(selectedDate)} 기록 비우기 완료`);
+    }
+
+    function adjustField(field, delta) {
+      const rec = getRec(selectedDate);
+      if (!rec.shift && delta > 0) {
+        rec.shift = '주간 8h';
+        rec.baseStart = '07:00';
+        rec.baseEnd = '15:30';
+        rec.baseH = 8;
+      }
+      rec[field] = Math.max(0, Math.round(((rec[field] || 0) + delta) * 10) / 10);
+      recalcTimes(rec);
+      saveRec(selectedDate, rec);
+      renderAll();
+    }
+
+    function adjustVoucher(delta) {
+      const rec = getRec(selectedDate);
+      rec.voucher = Math.max(0, (rec.voucher || 0) + delta);
+      saveRec(selectedDate, rec);
+      renderAll();
+    }
+
+    function moveDate(step, allowCrossCycle) {
+      const idx = cycleDates.findIndex(x => x.date === selectedDate);
+      if (idx < 0) return;
+      const nextIdx = idx + step;
+      if (nextIdx >= 0 && nextIdx < cycleDates.length) {
+        selectedDate = cycleDates[nextIdx].date;
+        renderAll();
+      } else if (allowCrossCycle) {
+        changePayMonth(nextIdx < 0 ? -1 : 1, nextIdx < 0 ? 'last' : 'first');
+      } else {
+        renderAll();
+      }
+    }
+
+    function selectDate(dateStr) {
+      selectedDate = dateStr;
+      renderAll();
+    }
+
+    function calcSpecialPay(hours) {
+      if (!hours || hours <= 0 || !cfg.hourly || cfg.hourly <= 0) return 0;
+      const unit = Math.floor(cfg.hourly * APP_DEFAULTS.overtimeRate);
+      return Math.ceil((unit * hours) / APP_DEFAULTS.specialRoundUnit) * APP_DEFAULTS.specialRoundUnit;
+    }
+
+    function calcDayExtraPay(rec) {
+      const ext = Math.round(((rec.early || 0) + (rec.overtime || 0)) * cfg.hourly * APP_DEFAULTS.overtimeRate);
+      const ngt = Math.round((rec.night || 0) * cfg.hourly * APP_DEFAULTS.nightRate);
+      const hol = Math.round((rec.holiday || 0) * cfg.hourly * APP_DEFAULTS.holidayRate);
+      const spc = calcSpecialPay(rec.special || 0);
+      return ext + ngt + hol + spc;
+    }
+
+    function calcTotals() {
+      let baseH = 0, earlyH = 0, overH = 0, nightH = 0, holH = 0;
+      let specH = 0, specPay = 0, voucherTotal = 0, workDays = 0;
+
+      cycleDates.forEach(d => {
+        const r = records[d.date];
+        if (!r) return;
+        if (r.shift && r.shift !== '휴무') workDays++;
+        baseH += resolveBaseH(r);
+        earlyH += r.early || 0;
+        overH += r.overtime || 0;
+        nightH += r.night || 0;
+        holH += r.holiday || 0;
+        specH += r.special || 0;
+        specPay += calcSpecialPay(r.special || 0);
+        voucherTotal += r.voucher || 0;
+      });
+
+      const extPay = Math.round((earlyH + overH) * cfg.hourly * APP_DEFAULTS.overtimeRate);
+      const nightPay = Math.round(nightH * cfg.hourly * APP_DEFAULTS.nightRate);
+      const holPay = Math.round(holH * cfg.hourly * APP_DEFAULTS.holidayRate);
+      const fixedSum = (cfg.basePay || 0) + (cfg.posPay || 0);
+      const grossPay = fixedSum + extPay + nightPay + holPay + specPay + voucherTotal;
+      const totalDeduct = (cfg.fixedIns || 0) + (cfg.estTax || 0) + voucherTotal;
+      const netCash = grossPay - totalDeduct;
+
+      return {
+        baseH, earlyH, overH, nightH, holH, specH,
+        extPay, nightPay, holPay, specPay,
+        fixedSum, voucherTotal, grossPay, totalDeduct, netCash, workDays
+      };
+    }
+
+    /* =========================================================
+       5. 화면 전체 렌더링
+       ========================================================= */
+    function renderAll() {
+      const t = calcTotals();
+      const todayStr = getTodayStr();
+      const vUnit = APP_DEFAULTS.voucherUnit || 50000;
+
+      document.getElementById('hdr-group-tag').textContent =
+        (cfg.label && cfg.label.trim()) ? cfg.label.trim() : DEFAULT_CFG.label;
+
+      const isAllZero = !cfg.basePay && !cfg.posPay && !cfg.hourly && !cfg.fixedIns && !cfg.estTax;
+      document.getElementById('setup-guide-banner').classList.toggle('hidden', !isAllZero);
+
+      document.getElementById('home-net-cash').textContent = fmt(t.netCash);
+      document.getElementById('home-voucher-total').textContent = fmt(t.voucherTotal);
+      document.getElementById('home-voucher-count').textContent = `직접 추가 합계 (${Math.round(t.voucherTotal / vUnit)}매)`;
+      document.getElementById('home-gross-pay').textContent = fmt(t.grossPay);
+
+      document.getElementById('date-dropdown').value = selectedDate;
+      const isSelectedToday = selectedDate === todayStr;
+      document.getElementById('date-bar').className = isSelectedToday
+        ? 'flex items-center justify-between gap-1 bg-emerald-50 border border-emerald-400 rounded-xl p-1.5 mb-2 transition-colors'
+        : 'flex items-center justify-between gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1.5 mb-2 transition-colors';
+      document.getElementById('btn-jump-today').classList.toggle('hidden', isSelectedToday);
+
+      const rec = getRec(selectedDate);
+      const nightAmt = Math.round((rec.night || 0) * cfg.hourly * APP_DEFAULTS.nightRate);
+      document.getElementById('selected-night-info').textContent = `${rec.night || 0}h (${fmt(nightAmt)})`;
+
+      const curStyle = getShiftStyle(rec.shift);
+      const badgeEl = document.getElementById('selected-shift-badge');
+      badgeEl.textContent = rec.shift || '미입력';
+      badgeEl.className = rec.shift && curStyle.pill
+        ? `sh-pill ${curStyle.pill}`
+        : 'text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white text-slate-600 border border-blue-100';
+
+      document.querySelectorAll('.shift-btn').forEach(btn => {
+        SHIFT_ACT_CLASSES.forEach(cls => btn.classList.remove(cls));
+      });
+      if (rec.shift && curStyle.act) {
+        const activeBtn = document.getElementById('btn-shift-' + rec.shift);
+        if (activeBtn) activeBtn.classList.add(curStyle.act);
+      }
+
+      document.getElementById('val-early').textContent = `${rec.early || 0}h`;
+      document.getElementById('val-overtime').textContent = `${rec.overtime || 0}h`;
+      document.getElementById('val-night').textContent = `${rec.night || 0}h (${fmt(nightAmt)})`;
+      document.getElementById('val-holiday').textContent = `${rec.holiday || 0}h`;
+      document.getElementById('val-special').textContent = `${rec.special || 0}h (${fmt(calcSpecialPay(rec.special))})`;
+      document.getElementById('val-voucher').textContent = fmt(rec.voucher || 0);
+
+      document.getElementById('fixed-pay-label').textContent = `고정급 ${fmt(t.fixedSum)}`;
+      document.getElementById('st-ext-h').textContent = `${t.earlyH + t.overH}h (조${t.earlyH}+잔${t.overH})`;
+      document.getElementById('st-ext-p').textContent = fmt(t.extPay);
+      document.getElementById('st-ngt-h').textContent = `${t.nightH}h`;
+      document.getElementById('st-ngt-p').textContent = fmt(t.nightPay);
+      document.getElementById('st-hol-h').textContent = `${t.holH}h`;
+      document.getElementById('st-hol-p').textContent = fmt(t.holPay);
+      document.getElementById('st-spc-h').textContent = `${t.specH}h`;
+      document.getElementById('st-spc-p').textContent = fmt(t.specPay);
+      document.getElementById('st-base-h').textContent = `정상 ${t.baseH}h`;
+      document.getElementById('st-base-p').textContent = fmt(t.fixedSum);
+      document.getElementById('st-vch-c').textContent = `${Math.round(t.voucherTotal / vUnit)}장`;
+      document.getElementById('st-vch-p').textContent = fmt(t.voucherTotal);
+
+      // 일자별 근무 리스트
+      document.getElementById('day-list').innerHTML = cycleDates.map(d => {
+        const r = getRec(d.date);
+        const isSel = d.date === selectedDate;
+        const isToday = d.date === todayStr;
+        const bHrs = resolveBaseH(r);
+        const totalDayH = bHrs + (r.early || 0) + (r.overtime || 0) + (r.holiday || 0) + (r.special || 0);
+        const timeStr = (r.start && r.start !== '-') ? `${r.start}~${r.end}` : '';
+        const st = getShiftStyle(r.shift);
+
+        let cardCls = 'border border-slate-200 bg-white';
+        if (isToday && isSel) cardCls = 'border-2 border-emerald-600 bg-emerald-100/80 shadow-sm';
+        else if (isSel) cardCls = 'border-2 border-blue-600 bg-blue-50/80 shadow-sm';
+        else if (isToday) cardCls = 'border-2 border-emerald-400 bg-emerald-50/80';
+
+        const dateCol = isToday
+          ? 'text-emerald-700'
+          : (d.dayIdx === 0 ? 'text-rose-600' : (d.dayIdx === 6 ? 'text-blue-600' : 'text-slate-900'));
+
+        let tags = '';
+        if (bHrs) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-200/80 text-slate-700">정상 ${bHrs}h</span>`;
+        if (r.early) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800">조출 +${r.early}h</span>`;
+        if (r.overtime) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800">잔업 +${r.overtime}h</span>`;
+        if (r.night) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-indigo-100 text-indigo-800">야간 ${r.night}h</span>`;
+        if (r.holiday) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-700">특근 ${r.holiday}h</span>`;
+        if (r.special) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">특별 ${r.special}h</span>`;
+        if (r.voucher) tags += `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800">상품권 ${r.voucher / 10000}만</span>`;
+
+        return `
+          <div onclick="selectDate('${d.date}')" class="tap-btn rounded-xl px-3 py-2 cursor-pointer ${cardCls}">
+            <div class="flex items-center justify-between text-xs font-extrabold">
+              <div class="flex items-center flex-wrap gap-1">
+                <span class="${dateCol} tabular-nums">${formatShortYMD(d.date)}(${d.dow})</span>
+                ${isToday ? '<span class="text-[9.5px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-full leading-none">오늘</span>' : ''}
+                ${r.shift ? `<span class="sh-pill ${st.pill}">${r.shift}</span>` : ''}
+                ${timeStr ? `<span class="text-[11px] font-semibold text-slate-500 tabular-nums">${timeStr}</span>` : ''}
+              </div>
+              <span class="text-xs font-black text-slate-800 tabular-nums">${totalDayH ? totalDayH + 'h' : '-'}</span>
+            </div>
+            ${tags ? `<div class="flex flex-wrap gap-1 mt-1.5">${tags}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // 상세 근태표
+      document.getElementById('table-body').innerHTML = cycleDates.map(d => {
+        const r = getRec(d.date);
+        const isToday = d.date === todayStr;
+        const bHrs = resolveBaseH(r);
+        const dayPay = calcDayExtraPay(r);
+        const holSpec = [r.holiday ? `특${r.holiday}` : '', r.special ? `별${r.special}` : ''].filter(Boolean).join('/');
+        const st = getShiftStyle(r.shift);
+        const firstCol = isToday
+          ? 'text-emerald-700 font-black'
+          : (d.dayIdx === 0 ? 'text-rose-600 font-extrabold' : (d.dayIdx === 6 ? 'text-blue-600 font-extrabold' : 'text-slate-800'));
+
+        return `
+          <tr onclick="openEditModal('${d.date}')" class="cursor-pointer ${isToday ? 'bg-emerald-50 font-bold' : 'hover:bg-slate-50'}">
+            <td class="border border-slate-200 py-1.5 px-1.5 whitespace-nowrap ${firstCol}">
+              ${formatShortYMD(d.date)}(${d.dow})${isToday ? ' <span class="text-[9px] bg-emerald-500 text-white px-1 rounded-full">오늘</span>' : ''}
+            </td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.shift ? `<span class="sh-pill ${st.pill}">${r.shift}</span>` : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.start || '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.end || '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${bHrs ? bHrs + 'h' : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.early ? r.early + 'h' : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.overtime ? r.overtime + 'h' : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${r.night ? r.night + 'h' : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1">${holSpec || '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1.5 text-right font-bold text-blue-600">${dayPay ? dayPay.toLocaleString() : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1 font-bold text-amber-600">${r.voucher ? (r.voucher / 10000) + '만' : '-'}</td>
+            <td class="border border-slate-200 py-1.5 px-1 text-slate-500 text-[10px]">${r.note || ''}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalExtra = t.extPay + t.nightPay + t.holPay + t.specPay;
+      document.getElementById('table-foot').innerHTML = `
+        <tr class="bg-blue-50 font-black text-blue-900 border-t-2 border-blue-900">
+          <td colspan="2" class="border border-slate-300 py-2 px-1">합계 (${t.workDays}일)</td>
+          <td colspan="2" class="border border-slate-300 py-2 px-1">-</td>
+          <td class="border border-slate-300 py-2 px-1">${t.baseH}h</td>
+          <td class="border border-slate-300 py-2 px-1">${t.earlyH}h</td>
+          <td class="border border-slate-300 py-2 px-1">${t.overH}h</td>
+          <td class="border border-slate-300 py-2 px-1">${t.nightH}h</td>
+          <td class="border border-slate-300 py-2 px-1">특${t.holH}/별${t.specH}</td>
+          <td class="border border-slate-300 py-2 px-1.5 text-right">${totalExtra.toLocaleString()}원</td>
+          <td class="border border-slate-300 py-2 px-1">${t.voucherTotal / 10000}만</td>
+          <td class="border border-slate-300 py-2 px-1">-</td>
+        </tr>
+      `;
+
+      // 급여명세서 상세 정산
+      document.getElementById('payslip-detail').innerHTML = `
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">기본급 + 정기상여</span><strong class="font-extrabold">${fmt(cfg.basePay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">직책수당</span><strong class="font-extrabold">${fmt(cfg.posPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">조출·잔업수당 (${t.earlyH + t.overH}h)</span><strong class="text-blue-600 font-extrabold">${fmt(t.extPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">야간근로수당 (${t.nightH}h)</span><strong class="text-indigo-600 font-extrabold">${fmt(t.nightPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">휴일·특근수당 (${t.holH}h)</span><strong class="text-rose-600 font-extrabold">${fmt(t.holPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">특별근로수당 (${t.specH}h · 만원올림)</span><strong class="text-emerald-600 font-extrabold">${fmt(t.specPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm"><span class="text-slate-600">상품권 지급액 (과세포함)</span><strong class="text-amber-600 font-extrabold">${fmt(t.voucherTotal)}</strong></div>
+        <div class="flex justify-between py-3 px-2.5 my-1.5 rounded-xl bg-slate-100 text-sm font-extrabold border-0"><span>세전 지급 총액</span><strong>${fmt(t.grossPay)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm text-rose-600"><span>(-) 4대보험 고정공제</span><strong class="font-extrabold">-${fmt(cfg.fixedIns)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm text-rose-600"><span>(-) 소득세·지방세 (예상)</span><strong class="font-extrabold">-${fmt(cfg.estTax)}</strong></div>
+        <div class="flex justify-between py-2.5 text-sm text-amber-600"><span>(-) 상품권 공제 (별도 현장수령)</span><strong class="font-extrabold">-${fmt(t.voucherTotal)}</strong></div>
+        <div class="flex justify-between items-center pt-3.5 mt-1 border-t-2 border-slate-900 text-base font-black text-emerald-600"><span>실제 통장 입금액</span><span class="text-lg">${fmt(t.netCash)}</span></div>
+      `;
+
+      // 설정 입력칸 동기화
+      document.getElementById('cfg-label').value = cfg.label === DEFAULT_CFG.label ? '' : (cfg.label || '');
+      document.getElementById('cfg-base').value = cfg.basePay;
+      document.getElementById('cfg-pos').value = cfg.posPay;
+      document.getElementById('cfg-hourly').value = cfg.hourly;
+      document.getElementById('cfg-ins').value = cfg.fixedIns;
+      document.getElementById('cfg-tax').value = cfg.estTax;
+
+      if (!isBackupBoxDirty) {
+        syncBackupBoxFromState();
+      }
+    }
+
+    /* =========================================================
+       6. 출근 / 퇴근 기록 (야간 자정 넘김 보정)
+       ========================================================= */
+    function calcNightHours(startMs, endMs) {
+      const capEnd = Math.min(endMs, startMs + 24 * 3600000);
+      let nightMin = 0;
+      for (let ts = startMs; ts < capEnd; ts += 60000) {
+        const h = new Date(ts).getHours();
+        if (h >= 22 || h < 6) nightMin++;
+      }
+      return Math.round((nightMin / 60) * 2) / 2;
+    }
+
+    function clockIn() {
+      const now = new Date();
+      safeSet(STORAGE_CLK_KEY, String(now.getTime()));
+      safeSet(STORAGE_CLK_DATE_KEY, selectedDate);
+      const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const rec = getRec(selectedDate);
+      if (!rec.shift) rec.shift = '실근무';
+      rec.start = hm;
+      rec.baseStart = hm;
+      saveRec(selectedDate, rec);
+      updateLiveClock();
+      renderAll();
+      showToast(`${formatShortYMD(selectedDate)} 출근(${hm}) 기록 완료`);
+    }
+
+    function clockOut() {
+      const startMs = Number(safeGetRaw(STORAGE_CLK_KEY));
+      if (!startMs) {
+        showToast('먼저 출근 찍기를 눌러주세요.');
+        return;
+      }
+      const targetDate = safeGetRaw(STORAGE_CLK_DATE_KEY) || selectedDate;
+      const now = new Date();
+      const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const diffMin = Math.max(0, Math.round((now.getTime() - startMs) / 60000));
+      const hours = Math.round((diffMin / 60) * 2) / 2;
+      const nightH = calcNightHours(startMs, now.getTime());
+
+      safeRemove(STORAGE_CLK_KEY);
+      safeRemove(STORAGE_CLK_DATE_KEY);
+
+      const rec = getRec(targetDate);
+      if (!rec.shift) rec.shift = '실근무';
+      rec.end = hm;
+      rec.baseEnd = hm;
+      rec.baseH = Math.min(8, hours);
+      if (nightH > 0) rec.night = Math.max(rec.night || 0, nightH);
+      if (hours > 8) {
+        rec.overtime = Math.round(((rec.overtime || 0) + (hours - 8)) * 10) / 10;
+      }
+      saveRec(targetDate, rec);
+      updateLiveClock();
+      renderAll();
+      showToast(`${formatShortYMD(targetDate)} 퇴근(${hm}) 완료! 총 ${hours}h (야간 ${nightH}h)`);
+    }
+
+    /* =========================================================
+       7. UTF-8 안전 영문/숫자 전용 백업·복원 코드 (한글 출력 0%)
+       ========================================================= */
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      }
+      return btoa(binary);
+    }
+
+    function base64ToUtf8(b64) {
+      const binary = atob(b64.replace(/\s+/g, ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    function generateBackupCode() {
+      const payload = { v: 1, prefix: backupPrefix, cfg: cfg, records: records };
+      return `${backupPrefix}:${utf8ToBase64(JSON.stringify(payload))}`;
+    }
+
+    function parseBackupCode(rawText) {
+      const txt = String(rawText || '').trim();
+      if (!txt) return { ok: false, error: '복원 코드가 비어 있습니다.' };
+
+      if (txt.startsWith('{') && txt.endsWith('}')) {
+        try {
+          const obj = JSON.parse(txt);
+          if (obj && (obj.cfg || obj.records)) {
+            return {
+              ok: true,
+              prefix: sanitizePrefix(obj.prefix || backupPrefix),
+              cfg: obj.cfg || null,
+              records: obj.records || null
+            };
+          }
+        } catch (e) {}
+        return { ok: false, error: '올바른 JSON 백업 형식이 아닙니다.' };
+      }
+
+      const colonIdx = txt.indexOf(':');
+      if (colonIdx < 1) {
+        return { ok: false, error: '[식별키:영문코드] 형식(예: PAY1:eyJ...)으로 입력하세요.' };
+      }
+
+      const pfx = txt.slice(0, colonIdx).trim();
+      const b64 = txt.slice(colonIdx + 1).trim();
+      if (!/^[A-Za-z0-9_-]{1,20}$/.test(pfx)) {
+        return { ok: false, error: '식별키는 영문·숫자만 사용할 수 있습니다.' };
+      }
+
+      try {
+        const obj = JSON.parse(base64ToUtf8(b64));
+        if (obj && (typeof obj.cfg === 'object' || typeof obj.records === 'object')) {
+          return {
+            ok: true,
+            prefix: sanitizePrefix(pfx),
+            cfg: obj.cfg || null,
+            records: obj.records || null
+          };
+        }
+      } catch (e) {}
+      return { ok: false, error: '코드가 손상되었거나 올바른 백업 코드가 아닙니다.' };
+    }
+
+    function setBackupStatus(type, msg) {
+      const el = document.getElementById('backup-code-status');
+      if (!el) return;
+      el.textContent = msg;
+      if (type === 'error') {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-rose-50 text-rose-700 border border-rose-200 tabular-nums';
+      } else if (type === 'edited') {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-amber-50 text-amber-800 border border-amber-200 tabular-nums';
+      } else {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-emerald-50 text-emerald-800 border border-emerald-200 tabular-nums';
+      }
+    }
+
+    function syncBackupBoxFromState() {
+      const code = generateBackupCode();
+      document.getElementById('backup-prefix-input').value = backupPrefix;
+      document.getElementById('share-code-box').value = code;
+      isBackupBoxDirty = false;
+      setBackupStatus('ok', `✅ 영문/숫자 코드 생성됨 (키: ${backupPrefix} · 기록 ${Object.keys(records).length}일 · ${code.length}자)`);
+    }
+
+    function applyBackupPrefix() {
+      const raw = document.getElementById('backup-prefix-input').value.trim();
+      if (!raw) {
+        showToast('변경할 영문·숫자 식별키를 입력하세요.');
+        return;
+      }
+      backupPrefix = sanitizePrefix(raw);
+      safeSet(STORAGE_PREFIX_KEY, backupPrefix);
+      syncBackupBoxFromState();
+      showToast(`코드 식별키가 [${backupPrefix}]로 변경되었습니다.`);
+    }
+
+    function onBackupBoxInput() {
+      isBackupBoxDirty = true;
+      const val = document.getElementById('share-code-box').value.trim();
+      if (!val) {
+        setBackupStatus('edited', '✏️ 복원할 코드를 붙여넣고 [변경 코드 적용]을 누르세요.');
+        return;
+      }
+      const parsed = parseBackupCode(val);
+      if (parsed.ok) {
+        const cnt = parsed.records ? Object.keys(parsed.records).length : 0;
+        setBackupStatus('edited', `✏️ 유효한 코드 감지 (키: ${parsed.prefix} · 기록 ${cnt}일) → [변경 코드 적용]을 누르세요.`);
+      } else {
+        setBackupStatus('error', `⚠️ ${parsed.error}`);
+      }
+    }
+
+    function applyBackupBoxCode() {
+      const parsed = parseBackupCode(document.getElementById('share-code-box').value);
+      if (!parsed.ok) {
+        setBackupStatus('error', `⚠️ ${parsed.error}`);
+        showToast(parsed.error);
+        return;
+      }
+      backupPrefix = parsed.prefix;
+      safeSet(STORAGE_PREFIX_KEY, backupPrefix);
+      if (parsed.cfg) {
+        cfg = Object.assign({}, DEFAULT_CFG, parsed.cfg);
+        safeSet(STORAGE_CFG_KEY, cfg);
+      }
+      if (parsed.records) {
+        records = parsed.records;
+        safeSet(STORAGE_REC_KEY, records);
+      }
+      isBackupBoxDirty = false;
+      renderAll();
+      showToast(`복원 완료! (식별키: ${backupPrefix} · 근무기록 ${Object.keys(records).length}일)`);
+    }
+
+    function refreshBackupBox() {
+      syncBackupBoxFromState();
+      showToast('최신 영문 코드로 갱신되었습니다.');
+    }
+
+    function clearBackupBox() {
+      const box = document.getElementById('share-code-box');
+      box.value = '';
+      box.focus();
+      isBackupBoxDirty = true;
+      setBackupStatus('edited', '✏️ 입력칸을 비웠습니다. 코드를 붙여넣은 뒤 [변경 코드 적용]을 누르세요.');
+    }
+
+    function exportJsonBackup() {
+      const payload = {
+        app: '급여명세서',
+        version: 1,
+        prefix: backupPrefix,
+        exportedAt: new Date().toISOString(),
+        cfg: cfg,
+        records: records
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+      triggerDownload(blob, `급여명세서_백업_${getTodayStr()}.json`);
+      showToast('JSON 백업 파일 저장 요청 완료');
+    }
+
+    function triggerJsonImport() {
+      const input = document.getElementById('json-import-file');
+      input.value = '';
+      input.click();
+    }
+
+    function handleJsonImport(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const parsed = parseBackupCode(e.target.result);
+        if (!parsed.ok) {
+          showToast('올바른 백업 파일이 아닙니다.');
+          return;
+        }
+        backupPrefix = parsed.prefix;
+        safeSet(STORAGE_PREFIX_KEY, backupPrefix);
+        if (parsed.cfg) {
+          cfg = Object.assign({}, DEFAULT_CFG, parsed.cfg);
+          safeSet(STORAGE_CFG_KEY, cfg);
+        }
+        if (parsed.records) {
+          records = parsed.records;
+          safeSet(STORAGE_REC_KEY, records);
+        }
+        isBackupBoxDirty = false;
+        renderAll();
+        showToast('백업 파일 복원 완료!');
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    /* =========================================================
+       8. 모달 · 탭 · 설정 제어
+       ========================================================= */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    function openInstallModal() {
+      openModal('install-modal');
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+      const target = document.getElementById('view-' + name);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        const active = btn.getAttribute('data-tab') === name;
+        btn.className = active
+          ? 'nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#0f172a] text-white'
+          : 'nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold text-slate-500';
+      });
+      if (name === 'settings' && !isCodeEditorDirty) {
+        const box = document.getElementById('code-editor-box');
+        if (box && !box.value.trim()) {
+          loadCleanCodeIntoEditor(false);
+        }
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToSalarySetup() {
+      switchTab('settings');
+      setTimeout(() => {
+        const el = document.getElementById('cfg-base');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      }, 120);
+    }
+
+    function goToCodeEditor() {
+      closeModal('install-modal');
+      switchTab('settings');
+      setTimeout(() => {
+        if (!isCodeEditorDirty) loadCleanCodeIntoEditor(false);
+        const card = document.getElementById('code-editor-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          card.classList.add('ring-2', 'ring-emerald-500');
+          setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-500'), 1600);
+        }
+      }, 120);
+    }
+
+    function openEditModal(dateStr) {
+      modalDate = dateStr;
+      selectedDate = dateStr;
+      const r = getRec(dateStr);
+      document.getElementById('modal-date-title').textContent = `${dateStr} 상세 출퇴근 수정`;
+      document.getElementById('m-shift').value = r.shift || '';
+      document.getElementById('m-base').value = resolveBaseH(r);
+      document.getElementById('m-start').value = r.start === '-' ? '' : r.start;
+      document.getElementById('m-end').value = r.end === '-' ? '' : r.end;
+      document.getElementById('m-early').value = r.early || 0;
+      document.getElementById('m-overtime').value = r.overtime || 0;
+      document.getElementById('m-night').value = r.night || 0;
+      document.getElementById('m-holiday').value = r.holiday || 0;
+      document.getElementById('m-special').value = r.special || 0;
+      document.getElementById('m-voucher').value = r.voucher || 0;
+      document.getElementById('m-note').value = r.note || '';
+      openModal('edit-modal');
+    }
+
+    function onModalShiftChange() {
+      const sh = document.getElementById('m-shift').value;
+      const baseInput = document.getElementById('m-base');
+      if (!sh || sh === '휴무' || sh.includes('특근')) {
+        baseInput.value = 0;
+      } else if (sh !== '실근무') {
+        baseInput.value = 8;
+      }
+    }
+
+    function saveModalDay() {
+      const sh = document.getElementById('m-shift').value;
+      const st = document.getElementById('m-start').value.trim() || '-';
+      const en = document.getElementById('m-end').value.trim() || '-';
+      const baseVal = parseFloat(document.getElementById('m-base').value);
+      const baseH = !isNaN(baseVal) ? Math.max(0, baseVal) : ((sh && !sh.includes('특근') && sh !== '휴무') ? 8 : 0);
+
+      saveRec(modalDate, {
+        shift: sh, baseStart: st, baseEnd: en, start: st, end: en, baseH: baseH,
+        early: parseFloat(document.getElementById('m-early').value) || 0,
+        overtime: parseFloat(document.getElementById('m-overtime').value) || 0,
+        night: parseFloat(document.getElementById('m-night').value) || 0,
+        holiday: parseFloat(document.getElementById('m-holiday').value) || 0,
+        special: parseFloat(document.getElementById('m-special').value) || 0,
+        voucher: parseInt(document.getElementById('m-voucher').value, 10) || 0,
+        note: document.getElementById('m-note').value.trim()
+      });
+      closeModal('edit-modal');
+      renderAll();
+      showToast(`${modalDate} 수정 저장됨`);
+    }
+
+    function deleteModalDay() {
+      delete records[modalDate];
+      safeSet(STORAGE_REC_KEY, records);
+      closeModal('edit-modal');
+      renderAll();
+      showToast(`${modalDate} 삭제됨`);
+    }
+
+    function saveConfig(goHomeAfter) {
+      cfg.label = document.getElementById('cfg-label').value.trim() || DEFAULT_CFG.label;
+      cfg.basePay = Math.max(0, Number(document.getElementById('cfg-base').value) || 0);
+      cfg.posPay = Math.max(0, Number(document.getElementById('cfg-pos').value) || 0);
+      cfg.hourly = Math.max(0, Number(document.getElementById('cfg-hourly').value) || 0);
+      cfg.fixedIns = Math.max(0, Number(document.getElementById('cfg-ins').value) || 0);
+      cfg.estTax = Math.max(0, Number(document.getElementById('cfg-tax').value) || 0);
+      safeSet(STORAGE_CFG_KEY, cfg);
+      renderAll();
+      showToast('내 급여 기준이 저장되었습니다.');
+      if (goHomeAfter) switchTab('home');
+    }
+
+    function resetZeroConfig() {
+      cfg = Object.assign({}, DEFAULT_CFG);
+      safeSet(STORAGE_CFG_KEY, cfg);
+      renderAll();
+      showToast('모든 급여 기준을 0원으로 초기화했습니다.');
+    }
+
+    /* =========================================================
+       9. 정밀 클립보드 복사 (화면 한글 오복사 원천 차단)
+       ========================================================= */
+    function execSyncCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.left = '0';
+      ta.style.width = '2em';
+      ta.style.height = '2em';
+      ta.style.opacity = '0.01';
+      ta.style.border = '0';
+      ta.style.padding = '0';
+      ta.style.fontSize = '16px';
+      ta.style.userSelect = 'text';
+      ta.style.webkitUserSelect = 'text';
+      document.body.appendChild(ta);
+
+      try {
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      } catch (e) {}
+
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    function copyTextSafe(text, okMsg) {
+      if (execSyncCopy(text)) {
+        showToast(okMsg);
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast(okMsg))
+          .catch(() => showToast('자동 복사가 차단되었습니다. 입력칸을 길게 눌러 복사해 주세요.'));
+      } else {
+        showToast('자동 복사가 차단되었습니다. 입력칸을 길게 눌러 복사해 주세요.');
+      }
+    }
+
+    function copyKakaoSummary() {
+      const t = calcTotals();
+      const title = document.getElementById('hdr-period-title').textContent;
+      const txt =
+        `[${title} 급여 정산 요약]\n` +
+        `• 근무일수: ${t.workDays}일\n` +
+        `• 조출/잔업: ${t.earlyH + t.overH}h (${fmt(t.extPay)})\n` +
+        `• 야간수당: ${t.nightH}h (${fmt(t.nightPay)})\n` +
+        `• 휴일특근: ${t.holH}h (${fmt(t.holPay)})\n` +
+        `• 특별근로: ${t.specH}h (${fmt(t.specPay)})\n` +
+        `• 별도 상품권: ${fmt(t.voucherTotal)}\n` +
+        `▶ 실제 통장 입금액: ${fmt(t.netCash)}`;
+      copyTextSafe(txt, '카톡 정산 요약 복사 완료');
+    }
+
+    function copyShareCode() {
+      const box = document.getElementById('share-code-box');
+      const code = (box && box.value.trim()) ? box.value.trim() : generateBackupCode();
+      copyTextSafe(code, `영문 코드 복사 완료! (${code.slice(0, 18)}...)`);
+    }
+
+    /* =========================================================
+       10. 편집 가능한 HTML 코드란 & 깨끗한 파일/ZIP 저장 엔진
+       ========================================================= */
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function exportCSV() {
+      let csv = '\uFEFF일자(요일),근무구분,출근,퇴근,기본(h),조출(h),잔업(h),야간(h),특근(h),특별(h),일수당계(원),상품권(원),비고\n';
+      cycleDates.forEach(d => {
+        const r = getRec(d.date);
+        csv += `${d.date}(${d.dow}),${r.shift || ''},${r.start || ''},${r.end || ''},${resolveBaseH(r)},${r.early || 0},${r.overtime || 0},${r.night || 0},${r.holiday || 0},${r.special || 0},${calcDayExtraPay(r)},${r.voucher || 0},${r.note || ''}\n`;
+      });
+      const filename = `출퇴근표_${payPeriod.year}-${String(payPeriod.month).padStart(2, '0')}.csv`;
+      triggerDownload(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
+      showToast('엑셀(CSV) 저장 요청 완료');
+    }
+
+    function buildCleanHTMLString() {
+      const clone = document.documentElement.cloneNode(true);
+
+      // Tailwind 런타임 주입 style 및 외부 주입 script 제거
+      clone.querySelectorAll('style').forEach(s => {
+        if (s.id !== 'app-base-style') s.remove();
+      });
+      clone.querySelectorAll('script').forEach(s => {
+        if (s.id !== 'app-main-script' && !(s.src && s.src.includes('tailwindcss'))) s.remove();
+      });
+
+      // body 내 앱 외 외부 주입 노드 정리
+      const keepIds = new Set(['date-jump-modal', 'install-modal', 'edit-modal', 'toast', 'app-main-script']);
+      const cloneBody = clone.querySelector('body');
+      if (cloneBody) {
+        Array.from(cloneBody.children).forEach(child => {
+          const keep = child.classList.contains('mobile-shell') || keepIds.has(child.id);
+          if (!keep) child.remove();
+        });
+      }
+
+      // 기본 활성 탭을 홈·입력으로 초기화
+      clone.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+      const home = clone.querySelector('#view-home');
+      if (home) home.classList.remove('hidden');
+
+      clone.querySelectorAll('.nav-tab-btn').forEach(b => {
+        const isHome = b.getAttribute('data-tab') === 'home';
+        b.className = isHome
+          ? 'nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#0f172a] text-white'
+          : 'nav-tab-btn tap-btn flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-extrabold text-slate-500';
+      });
+
+      // 동적 영역 및 개인 기록 완전 초기화
+      const emptyIds = [
+        'date-dropdown', 'day-list', 'table-body', 'table-foot', 'payslip-detail',
+        'today-live-date', 'jump-year-select', 'jump-month-grid', 'share-code-box', 'code-editor-box'
+      ];
+      emptyIds.forEach(id => {
+        const el = clone.querySelector('#' + id);
+        if (el) el.innerHTML = '';
+      });
+
+      const zeroTextMap = {
+        'hdr-group-tag': APP_DEFAULTS.defaultTag,
+        'home-net-cash': '0원',
+        'home-voucher-total': '0원',
+        'home-voucher-count': '직접 추가 합계 (0매)',
+        'home-gross-pay': '0원',
+        'live-clock-display': '00:00:00',
+        'selected-night-info': '0h (0원)',
+        'selected-shift-badge': '미입력',
+        'val-early': '0h',
+        'val-overtime': '0h',
+        'val-night': '0h (0원)',
+        'val-holiday': '0h',
+        'val-special': '0h (0원)',
+        'val-voucher': '0원',
+        'fixed-pay-label': '고정급 0원',
+        'st-ext-h': '0h (조0+잔0)', 'st-ext-p': '0원',
+        'st-ngt-h': '0h', 'st-ngt-p': '0원',
+        'st-hol-h': '0h', 'st-hol-p': '0원',
+        'st-spc-h': '0h', 'st-spc-p': '0원',
+        'st-base-h': '정상 0h', 'st-base-p': '0원',
+        'st-vch-c': '0장', 'st-vch-p': '0원',
+        'backup-code-status': '✅ 영문/숫자 코드 준비됨',
+        'code-editor-status': 'ℹ️ [🔄 원본 불러오기]를 누르면 편집 가능한 순수 HTML 코드가 채워집니다.'
+      };
+      Object.keys(zeroTextMap).forEach(id => {
+        const el = clone.querySelector('#' + id);
+        if (el) el.textContent = zeroTextMap[id];
+      });
+
+      ['cfg-label', 'cfg-base', 'cfg-pos', 'cfg-hourly', 'cfg-ins', 'cfg-tax', 'backup-prefix-input'].forEach(id => {
+        const el = clone.querySelector('#' + id);
+        if (el) el.removeAttribute('value');
+      });
+
+      ['date-jump-modal', 'install-modal', 'edit-modal'].forEach(id => {
+        const el = clone.querySelector('#' + id);
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+
+      clone.querySelectorAll('.shift-btn').forEach(b => {
+        SHIFT_ACT_CLASSES.forEach(c => b.classList.remove(c));
+      });
+      const saveNotice = clone.querySelector('#save-done-notice');
+      if (saveNotice) saveNotice.classList.add('hidden');
+      const toastEl = clone.querySelector('#toast');
+      if (toastEl) {
+        toastEl.classList.add('hidden');
+        toastEl.textContent = '';
+      }
+      const mf = clone.querySelector('#pwa-manifest');
+      if (mf) mf.setAttribute('href', '');
+
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    function setCodeEditorStatus(type, msg) {
+      const el = document.getElementById('code-editor-status');
+      if (!el) return;
+      el.textContent = msg;
+      if (type === 'edited') {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-amber-50 text-amber-800 border border-amber-200 tabular-nums';
+      } else if (type === 'ok') {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-emerald-50 text-emerald-800 border border-emerald-200 tabular-nums';
+      } else {
+        el.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-lg my-2 bg-slate-100 text-slate-700 border border-slate-200 tabular-nums';
+      }
+    }
+
+    function loadCleanCodeIntoEditor(withToast) {
+      const html = buildCleanHTMLString();
+      const box = document.getElementById('code-editor-box');
+      if (box) box.value = html;
+      isCodeEditorDirty = false;
+      setCodeEditorStatus('ok', `✅ 깨끗한 순수 HTML 로드 완료 (${html.length.toLocaleString()}자 · 직접 수정 가능)`);
+      if (withToast) showToast('최신 순수 HTML 코드를 불러왔습니다.');
+    }
+
+    function onCodeEditorInput() {
+      isCodeEditorDirty = true;
+      const box = document.getElementById('code-editor-box');
+      const len = box ? box.value.length : 0;
+      setCodeEditorStatus('edited', `✏️ 코드 수정됨 (${len.toLocaleString()}자) — 아래 버튼으로 수정한 코드 그대로 복사·저장됩니다.`);
+    }
+
+    function getActiveHtmlCode() {
+      const box = document.getElementById('code-editor-box');
+      if (box && box.value.trim().length > 100) {
+        return box.value;
+      }
+      const clean = buildCleanHTMLString();
+      if (box) {
+        box.value = clean;
+        isCodeEditorDirty = false;
+        setCodeEditorStatus('ok', `✅ 깨끗한 순수 HTML 로드 완료 (${clean.length.toLocaleString()}자 · 직접 수정 가능)`);
+      }
+      return clean;
+    }
+
+    function crc32(bytes) {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= bytes[i];
+        for (let j = 0; j < 8; j++) {
+          crc = (crc >>> 1) ^ (0xEDB88320 & -(crc & 1));
+        }
+      }
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function createSingleFileZipBlob(filename, contentStr) {
+      const encoder = new TextEncoder();
+      const nameBytes = encoder.encode(filename);
+      const fileBytes = encoder.encode(contentStr);
+      const crc = crc32(fileBytes);
+      const fileLen = fileBytes.length;
+      const nameLen = nameBytes.length;
+      const localHeaderSize = 30 + nameLen;
+      const centralHeaderSize = 46 + nameLen;
+
+      const buf = new ArrayBuffer(localHeaderSize + fileLen + centralHeaderSize + 22);
+      const view = new DataView(buf);
+      const out = new Uint8Array(buf);
+      let off = 0;
+
+      // Local File Header
+      view.setUint32(off, 0x04034b50, true); off += 4;
+      view.setUint16(off, 20, true); off += 2;
+      view.setUint16(off, 0x0800, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0x5977, true); off += 2;
+      view.setUint32(off, crc, true); off += 4;
+      view.setUint32(off, fileLen, true); off += 4;
+      view.setUint32(off, fileLen, true); off += 4;
+      view.setUint16(off, nameLen, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      out.set(nameBytes, off); off += nameLen;
+
+      // File Data
+      out.set(fileBytes, off); off += fileLen;
+      const cdOffset = off;
+
+      // Central Directory Header
+      view.setUint32(off, 0x02014b50, true); off += 4;
+      view.setUint16(off, 20, true); off += 2;
+      view.setUint16(off, 20, true); off += 2;
+      view.setUint16(off, 0x0800, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0x5977, true); off += 2;
+      view.setUint32(off, crc, true); off += 4;
+      view.setUint32(off, fileLen, true); off += 4;
+      view.setUint32(off, fileLen, true); off += 4;
+      view.setUint16(off, nameLen, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint32(off, 0, true); off += 4;
+      view.setUint32(off, 0, true); off += 4;
+      out.set(nameBytes, off); off += nameLen;
+
+      // End of Central Directory Record
+      view.setUint32(off, 0x06054b50, true); off += 4;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 0, true); off += 2;
+      view.setUint16(off, 1, true); off += 2;
+      view.setUint16(off, 1, true); off += 2;
+      view.setUint32(off, centralHeaderSize, true); off += 4;
+      view.setUint32(off, cdOffset, true); off += 4;
+      view.setUint16(off, 0, true);
+
+      return new Blob([buf], { type: 'application/zip' });
+    }
+
+    function markSaved(name) {
+      document.getElementById('save-done-filename').textContent = `✅ ${name} 저장 요청 완료!`;
+      document.getElementById('save-done-notice').classList.remove('hidden');
+    }
+
+    function downloadZipFromEditor() {
+      const html = getActiveHtmlCode();
+      const zipBlob = createSingleFileZipBlob('index.html', html);
+      triggerDownload(zipBlob, '급여명세서.zip');
+      markSaved('급여명세서.zip');
+      showToast('급여명세서.zip 저장 요청됨! (내부 index.html 포함)');
+    }
+
+    function downloadHtmlFromEditor() {
+      const html = getActiveHtmlCode();
+      triggerDownload(new Blob([html], { type: 'text/html;charset=utf-8;' }), '급여명세서.html');
+      markSaved('급여명세서.html');
+      showToast('급여명세서.html 저장 요청됨!');
+    }
+
+    function copyCodeFromEditor() {
+      const html = getActiveHtmlCode();
+      copyTextSafe(html, 'HTML 코드 전체 복사 완료! (<!DOCTYPE html>...)');
+    }
+
+    async function shareAppFileFromEditor() {
+      try {
+        const html = getActiveHtmlCode();
+        const zipBlob = createSingleFileZipBlob('index.html', html);
+        const zipFile = new File([zipBlob], '급여명세서.zip', { type: 'application/zip' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [zipFile] })) {
+          await navigator.share({ title: '급여명세서', files: [zipFile] });
+          showToast('파일 공유 완료!');
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+      downloadZipFromEditor();
+    }
+
+    function openExternalWebintoapp() {
+      const url = 'https://www.webintoapp.com/app-maker';
+      if (!window.open(url, '_blank', 'noopener,noreferrer')) {
+        copyTextSafe(url, 'Webintoapp 주소 복사 완료! 크롬에 붙여넣으세요.');
+      }
+    }
+
+    // 앱 초기화 및 실시간 시계 시작
+    initManifest();
+    buildDates();
+    updateLiveClock();
+    setInterval(updateLiveClock, 1000);
+  </script>
+
+
+</body></html>
